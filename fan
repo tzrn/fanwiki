@@ -9,11 +9,11 @@ file="$(fzf <<< "$(ls -1 ~/.local/share/fwikis)")";
 file=~/.local/share/fwikis/$file
 
 pages=$(xml sel -t -m "/mediawiki/page" -v "title" -n $file | nl)
-page=$(fzf --tac -i <<< $pages | awk '{print $1}')
+page=$(fzf --tac -i --with-nth 2.. <<< $pages | awk '{print $1}')
 
 [ -z $page ] && exit 1
 redir=$(xml sel -t -m "/mediawiki/page[$page]/redirect" -v "@title" -n $file)
-[ -z "$redir" ] || page=$(grep "$redir$" <<< "$pages" | awk '{print $1}')
+[ -z "$redir" ] || page=$(grep "	${redir}$" <<< "$pages" | awk '{print $1}')
 
 html=fantemp_.html
 [ -f $html ] && rm $html

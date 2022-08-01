@@ -12,12 +12,15 @@ while :; do
 	#grep -o 'mw-redirect[^>]*' 'index' | sed 's/mw-redirect" title="//;s/.$//g' >> titles
 	grep -o 'redirect"><a href="/wiki/[^"]*"\|<li><a href="/wiki/[^"]*"' 'index' |\
 		sed 's/^.*href="\/wiki\///g;s/.$//g' >> /tmp/fwtitles
-	next=$url$(grep 'Next page' 'index' | grep -o 'href=[^>]*>Next' | head -n1 | sed 's/href=[^"]*"//;s/" title.*$//')
+	next="$url$(grep 'Next page' 'index' | grep -o 'href=[^>]*>Next' | head -n1 | sed 's/href=[^"]*"//;s/" title.*$//')"
 	[ -z "$(grep '>Next page' 'index')" ] && break
 done
 
 sed 's/^$//g' -zi fwtitles
-split fwtitles -l 3000 tmpw_
+
+limit=$2
+[ -z $limit ] && limit=3000
+split fwtitles -l $limit tmpw_
 
 for req in $(ls -1 tmpw_*);
 do
