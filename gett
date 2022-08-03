@@ -1,19 +1,22 @@
 #!/bin/bash
 
 ! [ -d ~/.local/share/fwikis ] && mkdir ~/.local/share/fwikis
-url=$(sed 's/\/wiki.*$//g' <<< $1)
+url=$(sed 's/\/[^\.]*$//g' <<< $1)
 next=$1
 
 cd /tmp
+i=0
+nl=0
  
-while :; do
+# if there are less than 3 links with wm-allpages-nav and it
+# is not the first page then there is no next page link
+while [ $nl -gt 3 ] || [ $i -lt 2 ]; do
 	echo $next
 	wget -q "$next" -O index
-	#grep -o 'mw-redirect[^>]*' 'index' | sed 's/mw-redirect" title="//;s/.$//g' >> titles
-	grep -o 'redirect"><a href="/wiki/[^"]*"\|<li><a href="/wiki/[^"]*"' 'index' |\
-		sed 's/^.*href="\/wiki\///g;s/.$//g' >> /tmp/fwtitles
-	next="$url$(grep 'Next page' 'index' | grep -o 'href=[^>]*>Next' | head -n1 | sed 's/href=[^"]*"//;s/" title.*$//')"
-	[ -z "$(grep '>Next page' 'index')" ] && break
+	grep -o 'redirect"><a href="/[^"]*"\|<li><a href="/[^"]*"' 'index' | grep -o '[^/]*$' | sed 's/.$//' >> /tmp/fwtitles
+	next="$(grep mw-allpages-nav index | grep -o 'href="[^"]*' )"
+	nl=$(wc -l <<< $ln) next=$(head -n1 <<< $next| sed 's/href="//')
+	i=$((i+1))
 done
 
 sed 's/^$//g' -zi fwtitles
@@ -26,16 +29,20 @@ for req in $(ls -1 tmpw_*);
 do
 	sed -zi "s/\n/%0D%0A/g;s/'/%27/g;s/,/%2C/g;s/(/%28/g;s/)/%29/g;s/\//%2F/g;s/_/+/g;s/&amp;/%26/g;\
 	s/^/catname=\&pages=/;s/$/\&curonly=1\&wpEditToken=%2B%5C\&title=Special%3AExport/" $req
-	#sed -i 's/\(.*\)%0D%0A/\1/' $req
-	wget $url/wiki/Special:Export --post-file=$req -O "fp_$req"
+	wget $(sed 's/\/$//;s/[^/]*$//' <<< $1)Special:Export --post-file=$req -O "fp_$req"
 done
 
-title=$(sed 's/https\:\/\///g;s/\..*//g;s/$/_wiki/g' <<< $url)
-xmlmerge fp_tmpw_* > ~/.local/share/fwikis/"$title"
-sed 's/ns0\://g' -i ~/.local/share/fwikis/"$title"
-sed -i '1c\<mediawiki>' ~/.local/share/fwikis/"$title"
+echo -n "filename:"
+read title
 
+cd ~/.local/share/fwikis
+xmlmerge /tmp/fp_tmpw_* > "$title"
+sed 's/ns0\://g' -i "$title"
+sed -i '1c\<mediawiki>' "$title"
+
+cd /tmp
 rm tmpw_*
 rm fp_tmpw*
 rm fwtitles
 rm index
+echo "done with $title"

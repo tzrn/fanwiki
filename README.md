@@ -7,7 +7,6 @@ Download fandom wikis and browse them offline
 + pandoc
 + xmlstarlet
 + fzf
-+ netsurf (or you can replace it with another browser in the script)
 
 **Usage:**
 - Download wiki with gett script. You need the url of AllPages of the wiki for that.
