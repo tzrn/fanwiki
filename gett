@@ -11,11 +11,12 @@ nl=0
 # if there are less than 3 links with wm-allpages-nav and it
 # is not the first page then there is no next page link
 while [ $nl -gt 3 ] || [ $i -lt 2 ]; do
-	echo $next
+	echo "$next"
 	wget -q "$next" -O index
 	grep -o 'redirect"><a href="/[^"]*"\|<li><a href="/[^"]*"' 'index' | grep -o '[^/]*$' | sed 's/.$//' >> /tmp/fwtitles
 	next="$(grep mw-allpages-nav index | grep -o 'href="[^"]*' )"
-	nl=$(wc -l <<< $ln) next=$(head -n1 <<< $next| sed 's/href="//')
+	nl=$(wc -l <<< $next)
+	next=$url$(head -n1 <<< $next | sed 's/href="//')
 	i=$((i+1))
 done
 
